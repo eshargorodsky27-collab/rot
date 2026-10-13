@@ -2,3 +2,6 @@
 .sync.log
 .DS_Store
 *.tmp
+.dce-bin/
+bin/
+obj/

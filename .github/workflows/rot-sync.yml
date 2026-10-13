@@ -1,0 +1,81 @@
+name: Sync rot-trades
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # every 5 minutes (GitHub may run it a few minutes late when busy)
+  workflow_dispatch:        # lets you run it by hand from the Actions tab
+
+concurrency:
+  group: rot-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CHANNEL_ID: "1519487140231123144"   # RICH0FFTENN1S #rot-trades
+      AUTHOR_ID: "309854776307351554"     # only R0T's posts are saved
+    steps:
+      - name: Skip quiet hours (12am-6am New York time)
+        id: quiet
+        run: |
+          h=$(TZ=America/New_York date +%-H)
+          if [ "$h" -lt 6 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Quiet hours (${h}:00 ET) - skipping this run."
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.quiet.outputs.skip != 'true'
+
+      - name: Restore exporter build
+        if: steps.quiet.outputs.skip != 'true'
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: .dce-bin
+          key: dce-${{ runner.os }}-${{ hashFiles('tools/dce/**/*.cs', 'tools/dce/**/*.csproj', 'tools/dce/*.props', 'tools/dce/global.json') }}
+
+      - name: Set up .NET
+        if: steps.quiet.outputs.skip != 'true' && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: tools/dce/global.json
+
+      - name: Build exporter
+        if: steps.quiet.outputs.skip != 'true' && steps.cache.outputs.cache-hit != 'true'
+        run: >
+          dotnet publish tools/dce/DiscordChatExporter.Cli
+          -c Release -r linux-x64 --self-contained
+          -p:CSharpier_Bypass=true -o .dce-bin
+
+      - name: Check #rot-trades for new posts
+        if: steps.quiet.outputs.skip != 'true'
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+        run: |
+          if [ -z "$DISCORD_TOKEN" ]; then
+            echo "::warning::DISCORD_TOKEN secret is not set yet (Settings > Secrets and variables > Actions)."
+            exit 0
+          fi
+          ./.dce-bin/DiscordChatExporter.Cli watch --once \
+            --channel "$CHANNEL_ID" --author "$AUTHOR_ID" --minimal \
+            --output .
+
+      - name: Commit and push new posts
+        if: steps.quiet.outputs.skip != 'true'
+        run: |
+          git config user.name "rot-sync"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A new all-messages.jsonl .last-* 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No new posts."
+          else
+            n=$(git diff --cached --name-only -- new | wc -l | tr -d ' ')
+            git commit -m "Add $n new rot-trades post(s)"
+            git push
+          fi
