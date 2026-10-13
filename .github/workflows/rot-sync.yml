@@ -24,7 +24,7 @@ jobs:
         id: quiet
         run: |
           h=$(TZ=America/New_York date +%-H)
-          if [ "$h" -lt 6 ]; then
+          if [ "$h" -lt 6 ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "Quiet hours (${h}:00 ET) - skipping this run."
           fi
