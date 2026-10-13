@@ -62,6 +62,9 @@ jobs:
             echo "::warning::ROT secret (your Discord token) is not set yet (Settings > Secrets and variables > Actions)."
             exit 0
           fi
+          # Strip quotes, spaces and line breaks that sneak in when pasting
+          DISCORD_TOKEN=$(printf '%s' "$DISCORD_TOKEN" | tr -d '"'"'"' \r\n\t')
+          export DISCORD_TOKEN
           ./.dce-bin/DiscordChatExporter.Cli watch --once \
             --channel "$CHANNEL_ID" --author "$AUTHOR_ID" --minimal \
             --output .
