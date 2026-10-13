@@ -56,10 +56,10 @@ jobs:
       - name: Check #rot-trades for new posts
         if: steps.quiet.outputs.skip != 'true'
         env:
-          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          DISCORD_TOKEN: ${{ secrets.ROT }}
         run: |
           if [ -z "$DISCORD_TOKEN" ]; then
-            echo "::warning::DISCORD_TOKEN secret is not set yet (Settings > Secrets and variables > Actions)."
+            echo "::warning::ROT secret (your Discord token) is not set yet (Settings > Secrets and variables > Actions)."
             exit 0
           fi
           ./.dce-bin/DiscordChatExporter.Cli watch --once \
