@@ -1,0 +1,4 @@
+.watcher.log
+.sync.log
+.DS_Store
+*.tmp
