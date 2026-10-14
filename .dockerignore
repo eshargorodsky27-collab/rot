@@ -1,0 +1,12 @@
+# keep the fly build context small; the worker clones the repo fresh at startup for live state
+.git/
+.dce-bin/
+new/
+all-messages.jsonl
+.env
+*.log
+.pm2-out.log
+.pm2-err.log
+node_modules/
+**/bin/
+**/obj/

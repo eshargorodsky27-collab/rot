@@ -1,0 +1,15 @@
+# rot watcher worker on fly.io (no inbound traffic — it only polls Discord and pushes to GitHub).
+# Deploy from the repo root:  fly deploy
+app = "ebs-rot-watch"
+primary_region = "iad"
+
+[build]
+  dockerfile = "fly/Dockerfile"
+
+[env]
+  INTERVAL = "60"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "256mb"
