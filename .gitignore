@@ -5,3 +5,8 @@
 .dce-bin/
 bin/
 obj/
+
+# local watcher
+.env
+.pm2-out.log
+.pm2-err.log

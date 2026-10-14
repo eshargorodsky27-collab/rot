@@ -1,9 +1,11 @@
 name: Sync rot-trades
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"   # every 5 minutes (GitHub may run it a few minutes late when busy)
-  workflow_dispatch:        # lets you run it by hand from the Actions tab
+  # schedule DISABLED 2026-10-13: GitHub throttled */5 to ~3 runs in 17h. The always-on local
+  # watcher (pm2 "rot-watch") now captures ~every 60s. Uncomment to fall back to GitHub cron.
+  # schedule:
+  #   - cron: "*/5 * * * *"
+  workflow_dispatch:        # still works: run by hand from the Actions tab as a backup
 
 concurrency:
   group: rot-sync
